@@ -123,7 +123,8 @@ publishing {
 }
 
 signing {
-    def signingKey = new String(Base64.getDecoder().decode(System.getenv("SIGNING_KEY_BASE64")))
+    def signingKeyBase64 = System.getenv("SIGNING_KEY_BASE64") ?: ""
+    def signingKey = new String(Base64.getDecoder().decode(signingKeyBase64))
     def signingPassword = System.getenv("SIGNING_PASSWORD")
     useInMemoryPgpKeys(signingKey, signingPassword)
     sign configurations.archives
