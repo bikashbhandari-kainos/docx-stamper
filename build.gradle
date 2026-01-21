@@ -123,12 +123,21 @@ publishing {
 }
 
 signing {
-    def signingKey = new String(Base64.getDecoder().decode(System.getenv("SIGNING_KEY_BASE64")))
+    def signingKeyBase64 = System.getenv("SIGNING_KEY_BASE64")
     def signingPassword = System.getenv("SIGNING_PASSWORD")
-    useInMemoryPgpKeys(signingKey, signingPassword)
-    sign configurations.archives
-    sign publishing.publications.mavenPublication
+    
+    // Only configure signing if credentials are available
+    if (signingKeyBase64 != null && signingPassword != null) {
+        def signingKey = new String(Base64.getDecoder().decode(signingKeyBase64))
+        useInMemoryPgpKeys(signingKey, signingPassword)
+        sign configurations.archives
+        sign publishing.publications.mavenPublication
+    }
 }
 
 // we don't want to sign the artifacts unless we publish
-signArchives.onlyIf{gradle.startParameter.getTaskNames().contains("publish")}
+tasks.whenTaskAdded { task ->
+    if (task.name == 'signArchives') {
+        task.onlyIf { gradle.startParameter.getTaskNames().contains("publish") }
+    }
+}
